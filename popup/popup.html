@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PageMind</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="logo">
+      <svg class="logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="var(--accent)"/>
+        <path d="M8 12h8M12 8v8" stroke="var(--bg-primary)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="logo-text">PageMind</span>
+    </div>
+    <span class="version-badge">v1.0</span>
+  </header>
+
+  <!-- ── API Key Setup ── -->
+  <section id="key-setup" class="panel hidden" aria-label="API Key Setup">
+    <div class="setup-icon">🤖</div>
+    <h2 class="setup-title">Connect OpenAI</h2>
+    <p class="setup-desc">Enter your OpenAI API key to enable high-depth summaries. Your key is stored securely in your browser.</p>
+    <div class="input-group">
+      <input
+        type="password"
+        id="api-key-input"
+        class="key-input"
+        placeholder="sk-..."
+        aria-label="OpenAI API Key"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="toggle-key-visibility" class="icon-btn" aria-label="Toggle key visibility" title="Show/hide key">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <p id="key-error" class="key-error hidden" role="alert"></p>
+    <button id="save-key-btn" class="btn btn-primary full-width" aria-label="Save API key">
+      Save & Connect
+    </button>
+    <p class="setup-footer">Don't have a key? Get one at <a href="https://platform.openai.com/" target="_blank">openai.com</a></p>
+  </section>
+
+  <!-- ── Main Panel ── -->
+  <section id="main-panel" class="panel hidden" aria-label="Page Summarizer">
+    <!-- Page info bar -->
+    <div id="page-info" class="page-info">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="page-icon">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+      </svg>
+      <span id="page-title-display" class="page-title-text">Loading page info...</span>
+    </div>
+
+
+    <!-- Summarize button -->
+    <button id="summarize-btn" class="btn btn-primary full-width summarize-btn" aria-label="Summarize this page">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+        <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+      </svg>
+      Summarize This Page
+    </button>
+  </section>
+
+  <!-- ── Loading State ── -->
+  <section id="loading-state" class="panel hidden" aria-label="Loading" aria-live="polite">
+    <div class="loading-container">
+      <div class="spinner-ring">
+        <div class="spinner-segment"></div>
+        <div class="spinner-segment"></div>
+        <div class="spinner-segment"></div>
+        <div class="spinner-segment"></div>
+      </div>
+      <p class="loading-text">Analyzing page content...</p>
+      <p id="loading-subtext" class="loading-subtext">Connecting to engine</p>
+    </div>
+  </section>
+
+  <!-- ── Results ── -->
+  <section id="results-panel" class="panel hidden" aria-label="Summary Results">
+    <!-- Meta row -->
+    <div class="results-meta">
+      <div class="reading-time-badge" id="reading-time">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+        </svg>
+        <span id="reading-time-text">— min read</span>
+      </div>
+      <div class="word-count-badge">
+        <span id="word-count-text">0 words</span>
+      </div>
+      <div id="trial-badge" class="trial-badge hidden" title="One-time trial summary">
+        Trial
+      </div>
+      <div id="cached-badge" class="cached-badge hidden" title="Loaded from cache">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20,6 9,17 4,12"/>
+        </svg>
+        cached
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="results-section">
+      <h3 class="section-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Summary
+      </h3>
+      <ul id="bullets-list" class="bullets-list" aria-label="Page summary bullets"></ul>
+    </div>
+
+    <!-- Key Insights -->
+    <div class="results-section">
+      <h3 class="section-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Key Insights
+      </h3>
+      <ul id="insights-list" class="insights-list" aria-label="Key insights"></ul>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-row">
+      <button id="copy-btn" class="btn btn-secondary" aria-label="Copy summary to clipboard">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+        Copy
+      </button>
+      <button id="highlight-btn" class="btn btn-secondary" aria-label="Highlight key phrases on page">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        Highlight
+      </button>
+      <button id="clear-btn" class="btn btn-ghost" aria-label="Clear results and reset">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1,4 1,10 7,10"/>
+          <path d="M3.51 15a9 9 0 1 0 .49-3.85"/>
+        </svg>
+        Reset
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Error State ── -->
+  <div id="error-msg" class="error-banner hidden" role="alert" aria-live="assertive">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span id="error-text">Something went wrong.</span>
+    <button id="error-dismiss" class="error-dismiss" aria-label="Dismiss error">✕</button>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <span id="powered-by">PageMind AI Engine</span>
+    <button id="settings-btn" class="footer-link" aria-label="Settings">Settings</button>
+  </footer>
+
+
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
