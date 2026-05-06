@@ -86,4 +86,4 @@
 MIT License — free to use, modify, and distribute.
 
 ## NOTE
-The MIT License is not certified but only used for professional
+The MIT License is not certified but only used for professional purposes and also keep in mind that this extension has a one free trial to see how it summarizes. After the trial, click on settings and put in you OpenAI API Key to keep using the extension. I did it that way so users can see what the extension can do.
